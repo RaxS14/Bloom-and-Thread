@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom & Thread - Suppliers</title>
+<link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; font-family: 'Poppins', sans-serif; background:#ffe6f0; }
+  
+  .sidebar {
+    position: fixed; left: 0; top: 0; width: 220px; height: 100%; 
+    background: #ffb6c1; color: #fff;
+    display: flex; flex-direction: column; align-items: center; padding-top: 20px; 
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  }
+  .sidebar img { width: 80px; border-radius: 50%; margin-bottom: 10px; border: 2px solid #fff; }
+  .sidebar h2 { margin: 5px 0; font-size: 1.2rem; }
+  .sidebar p { font-size: 0.9rem; margin-bottom: 20px; }
+
+  .sidebar ul { list-style: none; padding: 0; width: 100%; }
+  .sidebar ul li { width: 100%; }
+  .sidebar ul li a {
+    display: flex; align-items: center; padding: 12px 20px; color: #fff; text-decoration: none;
+    font-weight: 500; transition: 0.3s; border-radius: 8px; margin: 3px 0;
+  }
+  .sidebar ul li a:hover { background: #ff99c8; color: #4a2c2a; }
+  .sidebar ul li a i { margin-right: 10px; font-size: 1.1rem; }
+
+  .main-content { margin-left: 220px; padding: 40px; background: #fff0f5; min-height: 100vh; }
+  .main-content h1 { color: #ff69b4; font-size: 2rem; margin-bottom: 20px; }
+  .main-content p { font-size: 1.1rem; line-height: 1.6; color: #b30059; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <img src="images/admin-avatar.png" alt="Admin Avatar">
+  <h2>Admin</h2>
+  <p>Administrator</p>
+  <ul>
+    <li><a href="admin.html"><i class="ri-dashboard-line"></i> Dashboard</a></li>
+    <li><a href="adminorder.html"><i class="ri-shopping-bag-3-line"></i> Orders</a></li>
+    <li><a href="inventory.html"><i class="ri-archive-2-line"></i> Inventory</a></li>
+    <li><a href="supplier.html"><i class="ri-truck-line"></i> Suppliers</a></li>
+    <li><a href="reports.html"><i class="ri-bar-chart-2-line"></i> Reports</a></li>
+    <li><a href="#" id="logoutLink"><i class="ri-logout-circle-line"></i> Logout</a></li>
+  </ul>
+</aside>
+
+<div class="main-content">
+  <h1>Our Role as Supplier</h1>
+  <p>
+    At Bloom & Thread, we supply our carefully crafted products directly to our sellers, ensuring 
+    they have access to high-quality items that delight their customers. We prioritize product excellence, 
+    timely deliveries, and consistent support so our sellers can confidently grow their business. 
+    By providing premium products and reliable service, we help our sellers succeed and maintain the 
+    high standards that Bloom & Thread is known for.
+  </p>
+</div>
+
+</body>
+</html>

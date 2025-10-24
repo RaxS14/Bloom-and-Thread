@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Bloom & Thread</title>
+  <link rel="stylesheet" href="login.css">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Login Form -->
+    <div id="loginFormSection" class="form-section active">
+      <h1>Welcome Back!</h1>
+      <form id="loginForm">
+        <label for="loginUsername">Username:</label>
+        <input type="text" id="loginUsername" required>
+
+        <label for="loginPassword">Password:</label>
+        <div class="password-container">
+          <input type="password" id="loginPassword" required>
+          <i id="toggleLoginPassword">👁️</i>
+        </div>
+
+        <button type="submit">Log In</button>
+      </form>
+
+      <div class="links">
+        <a id="showRegister">Register</a>
+        <a id="showForgot">Forgot Password?</a>
+      </div>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerFormSection" class="form-section">
+      <h1>Register</h1>
+      <form id="registerForm">
+        <label for="regUsername">Username:</label>
+        <input type="text" id="regUsername" required>
+
+        <label for="regEmail">Email:</label>
+        <input type="email" id="regEmail" required>
+
+        <label for="regPassword">Password:</label>
+        <div class="password-container">
+          <input type="password" id="regPassword" required>
+          <i id="toggleRegPassword">👁️</i>
+        </div>
+
+        <button type="submit">Register</button>
+      </form>
+      <div class="links">
+        <a id="backToLoginFromReg">Back to Login</a>
+      </div>
+    </div>
+
+    <!-- Forgot Password Form -->
+    <div id="forgotFormSection" class="form-section">
+      <h1>Forgot Password</h1>
+      <form id="forgotForm">
+        <label for="forgotEmail">Email:</label>
+        <input type="email" id="forgotEmail" required>
+        <button type="submit">Reset Password</button>
+      </form>
+      <div class="links">
+        <a id="backToLoginFromForgot">Back to Login</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Form toggle
+    const loginSection = document.getElementById('loginFormSection');
+    const registerSection = document.getElementById('registerFormSection');
+    const forgotSection = document.getElementById('forgotFormSection');
+
+    document.getElementById('showRegister').addEventListener('click', () => {
+      loginSection.classList.remove('active');
+      registerSection.classList.add('active');
+    });
+
+    document.getElementById('showForgot').addEventListener('click', () => {
+      loginSection.classList.remove('active');
+      forgotSection.classList.add('active');
+    });
+
+    document.getElementById('backToLoginFromReg').addEventListener('click', () => {
+      registerSection.classList.remove('active');
+      loginSection.classList.add('active');
+    });
+
+    document.getElementById('backToLoginFromForgot').addEventListener('click', () => {
+      forgotSection.classList.remove('active');
+      loginSection.classList.add('active');
+    });
+
+    // Show/hide password toggles
+    const toggleLogin = document.getElementById('toggleLoginPassword');
+    const loginPassword = document.getElementById('loginPassword');
+    toggleLogin.addEventListener('click', () => {
+      const type = loginPassword.type === 'password' ? 'text' : 'password';
+      loginPassword.type = type;
+      toggleLogin.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+
+    const toggleReg = document.getElementById('toggleRegPassword');
+    const regPassword = document.getElementById('regPassword');
+    toggleReg.addEventListener('click', () => {
+      const type = regPassword.type === 'password' ? 'text' : 'password';
+      regPassword.type = type;
+      toggleReg.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+
+    // Login with success indicator
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      // Create overlay
+      const overlay = document.createElement('div');
+      overlay.textContent = "✅ Logged in successfully!";
+      Object.assign(overlay.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        background: 'rgba(255,255,255,0.95)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontFamily: "'Poppins', sans-serif",
+        fontSize: '2rem',
+        color: '#d36c6c',
+        zIndex: '1000',
+        opacity: '0',
+        transition: 'opacity 0.5s ease'
+      });
+
+      document.body.appendChild(overlay);
+
+      // Fade in overlay
+      setTimeout(() => overlay.style.opacity = '1', 10);
+
+      // Redirect after 2.5 seconds
+      setTimeout(() => window.location.href = 'index.html', 2500);
+    });
+
+    // Simulated register and forgot actions
+    document.getElementById('registerForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('Registration successful! Please log in.');
+      registerSection.classList.remove('active');
+      loginSection.classList.add('active');
+    });
+
+    document.getElementById('forgotForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('Password reset link sent!');
+      forgotSection.classList.remove('active');
+      loginSection.classList.add('active');
+    });
+  </script>
+</body>
+</html>

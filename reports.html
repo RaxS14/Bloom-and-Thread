@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom & Thread - Reports</title>
+<link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { margin:0; font-family: 'Poppins', sans-serif; background:#ffe6f0; }
+  .sidebar { position: fixed; left: 0; top: 0; width: 220px; height: 100%; 
+    background: #ffb6c1; color: #fff; display: flex; flex-direction: column; align-items: center; padding-top: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+  .sidebar img { width: 80px; border-radius: 50%; margin-bottom: 10px; border: 2px solid #fff; }
+  .sidebar h2 { margin: 5px 0; font-size: 1.2rem; }
+  .sidebar p { font-size: 0.9rem; margin-bottom: 20px; }
+  .sidebar ul { list-style: none; padding: 0; width: 100%; }
+  .sidebar ul li { width: 100%; }
+  .sidebar ul li a { display: flex; align-items: center; padding: 12px 20px; color: #fff; text-decoration: none; font-weight: 500; transition: 0.3s; border-radius: 8px; margin: 3px 0; }
+  .sidebar ul li a:hover { background: #ff99c8; color: #4a2c2a; }
+  .sidebar ul li a i { margin-right: 10px; font-size: 1.1rem; }
+  .main-content { margin-left: 220px; padding: 40px; min-height: 100vh; }
+  h1 { color: #ff69b4; font-size: 2rem; margin-bottom: 20px; }
+  .stats { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
+  .stat-card { flex: 1 1 200px; background: #fff0f5; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(255, 182, 193, 0.4); text-align: center; }
+  .stat-card h2 { margin: 0; font-size: 1.5rem; color: #b30059; }
+  .stat-card p { margin: 5px 0 0; font-weight: 600; color: #4a2c2a; }
+  .chart-container { margin-bottom: 40px; background:#fff0f5; padding:20px; border-radius:15px; box-shadow:0 4px 15px rgba(255,182,193,0.4); }
+  canvas { max-width: 100%; }
+  table { width: 100%; border-collapse: collapse; margin-top:20px; background:#fff0f5; border-radius:10px; overflow:hidden; box-shadow:0 4px 15px rgba(255,182,193,0.4); }
+  th, td { padding:12px; text-align:left; border-bottom:1px solid #ffb6c1; color:#4a2c2a; }
+  th { background:#ff99c8; color:#4a2c2a; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <img src="images/admin-avatar.png" alt="Admin Avatar">
+  <h2>Admin</h2>
+  <p>Administrator</p>
+  <ul>
+    <li><a href="admin.html"><i class="ri-dashboard-line"></i> Dashboard</a></li>
+    <li><a href="adminorder.html"><i class="ri-shopping-bag-3-line"></i> Orders</a></li>
+    <li><a href="inventory.html"><i class="ri-archive-2-line"></i> Inventory</a></li>
+    <li><a href="supplier.html"><i class="ri-truck-line"></i> Suppliers</a></li>
+    <li><a href="reports.html"><i class="ri-bar-chart-2-line"></i> Reports</a></li>
+    <li><a href="#" id="logoutLink"><i class="ri-logout-circle-line"></i> Logout</a></li>
+  </ul>
+</aside>
+
+<div class="main-content">
+  <h1>Reports Dashboard</h1>
+  <div class="stats">
+    <div class="stat-card"><h2 id="total-orders">0</h2><p>Total Orders</p></div>
+    <div class="stat-card"><h2 id="total-sales">₱0</h2><p>Total Sales</p></div>
+    <div class="stat-card"><h2 id="total-products">0</h2><p>Products in Inventory</p></div>
+  </div>
+  <div class="chart-container"><h2>Sales by Product</h2><canvas id="salesChart"></canvas></div>
+  <div class="chart-container"><h2>Orders Status</h2><canvas id="statusChart"></canvas></div>
+  <h2>Recent Orders</h2>
+  <table id="ordersTable">
+    <thead><tr><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+let salesChart, statusChart;
+
+function updateReports() {
+  const orders = JSON.parse(localStorage.getItem('orders')) || [];
+  const inventory = JSON.parse(localStorage.getItem('bloom_inventory')) || [];
+
+  // Stats
+  document.getElementById('total-orders').textContent = orders.length;
+  const totalSales = orders.reduce((sum,o)=>sum+o.cart.reduce((s,i)=>s+(i.price||0)*i.quantity,0),0);
+  document.getElementById('total-sales').textContent = `₱${totalSales.toLocaleString()}`;
+  document.getElementById('total-products').textContent = inventory.length;
+
+  // Sales by product
+  const productSales = {};
+  orders.forEach(o=>o.cart.forEach(i=>{productSales[i.title]=(productSales[i.title]||0)+(i.price||0)*i.quantity;}));
+  if(salesChart){salesChart.destroy();}
+  salesChart = new Chart(document.getElementById('salesChart'),{
+    type:'bar',
+    data:{ labels:Object.keys(productSales), datasets:[{ label:'Sales (₱)', data:Object.values(productSales), backgroundColor:'rgba(255,105,180,0.6)', borderColor:'rgba(255,105,180,1)', borderWidth:1 }] },
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+  });
+
+  // Orders status
+  const statusCounts = { 'Waiting for Confirmation':0, 'Confirmed':0, 'Delivered':0, 'Cancelled':0 };
+  orders.forEach(o=>{ statusCounts[o.status]=(statusCounts[o.status]||0)+1; });
+  if(statusChart){statusChart.destroy();}
+  statusChart = new Chart(document.getElementById('statusChart'),{
+    type:'doughnut',
+    data:{ labels:Object.keys(statusCounts), datasets:[{ data:Object.values(statusCounts), backgroundColor:['#ff69b4','#ffb6c1','#ffc0cb','#ff99c8'] }] },
+    options:{ responsive:true }
+  });
+
+  // Recent Orders table
+  const tbody = document.querySelector('#ordersTable tbody');
+  tbody.innerHTML='';
+  orders.slice(-5).reverse().forEach(order=>{
+    const tr=document.createElement('tr');
+    const itemsText = order.cart.map(i=>`${i.title} x${i.quantity}`).join(', ');
+    const total = order.cart.reduce((s,i)=>s+(i.price||0)*i.quantity,0);
+    tr.innerHTML = `<td>${order.customerName}</td><td>${itemsText}</td><td>₱${total.toLocaleString()}</td><td>${order.status}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// Initial render
+updateReports();
+
+// Listen for localStorage changes (cross-tab)
+window.addEventListener('storage', updateReports);
+
+// Auto-update every 2 seconds in same tab
+setInterval(updateReports,2000);
+</script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+/* === General Styles === */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  color: #4a2c2a;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #fff;
+}
+
+/* === Background Overlay === */
+.background-overlay {
+  background: url('thread.png') no-repeat center center fixed;
+  background-size: cover;
+  filter: blur(1px) brightness(1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* === Navbar === */
+.navbar {
+  width: 100%;
+  background: rgba(94, 54, 110, 0.9);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-container {
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 23px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-family: 'Great Vibes', cursive;
+  color: #ffffff;
+  font-size: 1.8rem;
+  text-decoration: none;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 25px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links li a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.nav-links li a:hover,
+.nav-links li a.active {
+  color: #ffb6c1;
+}
+
+/* === Main Content Wrapper === */
+main {
+  flex: 1; /* takes up remaining space to push footer down */
+}
+
+/* === Order Container === */
+.order-container {
+  max-width: 1200px;
+  margin: 80px auto;
+  padding: 20px;
+}
+
+/* === Order Items === */
+.order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 240, 245, 0.8);
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(255, 182, 193, 0.4);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.order-item img {
+  width: 120px;
+  height: auto;
+  border-radius: 15px;
+}
+
+.order-item h3 {
+  flex: 1;
+  margin: 0 20px;
+  font-size: 1.1rem;
+  color: #4a2c2a;
+}
+
+.order-item .price {
+  font-weight: 600;
+  margin-right: 20px;
+}
+
+/* === Receipts === */
+.receipt-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.receipt-container img {
+  width: 200px;
+  border-radius: 10px;
+  cursor: pointer; /* clickable */
+}
+
+/* === Order Total === */
+.order-total {
+  text-align: right;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #5e366e;
+  margin-top: 20px;
+}
+
+/* === Order Status === */
+.status {
+  font-weight: 700;
+  color: #5e366e;
+  margin-top: 15px;
+}
+
+/* === Track Order Button === */
+.track-btn {
+  display: block;
+  margin: 30px auto 20px;
+  padding: 10px 20px;
+  background: #5e366e;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.track-btn:hover {
+  background: #ffb6c1;
+  color: #4a2c2a;
+  transform: scale(1.05);
+}
+
+/* === Footer === */
+footer {
+  background: rgba(94, 54, 110, 0.9);
+  color: #fff;
+  padding: 20px 0;
+  text-align: center;
+  font-size: 0.95rem;
+  margin-top: auto; /* This pushes footer to the bottom */
+}
+
+/* === Responsive Design === */
+@media (max-width: 768px) {
+  .order-item {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .order-item h3 {
+    margin: 10px 0;
+  }
+}

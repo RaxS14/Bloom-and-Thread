@@ -1,0 +1,237 @@
+/* === General Styles === */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  color: #4a2c2a;
+  text-align: center;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === Background Image === */
+.background-overlay {
+  background: url('thread.png') no-repeat center center fixed;
+  background-size: cover;
+  filter: blur(1px) brightness(1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* === Navbar === */
+.navbar {
+  width: 100%;
+  background: rgba(94, 54, 110, 0.9);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-container {
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 23px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-family: 'Great Vibes', cursive;
+  color: #ffffff;
+  font-size: 1.8rem;
+  text-decoration: none;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 25px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links li a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.nav-links li a:hover {
+  color: #ffb6c1;
+}
+
+/* === Header === */
+header {
+  margin-top: 100px;
+}
+
+h1 {
+  font-family: 'Great Vibes', cursive;
+  font-size: 4rem;
+  color: #5e366e;
+  margin-bottom: 10px;
+}
+
+.tagline {
+  font-size: 1.5rem;
+  font-weight: 1000;
+  color: #5e366e;
+}
+
+/* === Two-Column Layout === */
+.content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1000px;
+  margin: 60px auto;
+  gap: 40px;
+  padding: 20px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+/* === Description Section === */
+.description {
+  flex: 1;
+  background: rgba(240, 248, 255, 0.75);
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(255, 182, 193, 0.5);
+  padding: 20px;
+  text-align: left;
+}
+
+.description p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #4a2c2a;
+}
+
+/* === Image Section === */
+.image-section {
+  flex: 1;
+  text-align: center;
+}
+
+.image-section img {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(255, 182, 193, 0.5);
+  transition: transform 0.3s ease;
+}
+
+.image-section img:hover {
+  transform: scale(1.03);
+}
+
+/* === Footer === */
+footer {
+  background: rgba(94, 54, 110, 0.9);
+  color: #ffffff;
+  padding: 20px 0;
+  text-align: center;
+  font-size: 0.95rem;
+  position: relative;
+}
+
+/* === Responsive Design === */
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column;
+  }
+
+  .image-section img {
+    max-width: 300px;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+/* === Extra Description Section === */
+.extra-description {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 25px 20px;
+  background: rgba(255, 240, 245, 0.8); /* soft pinkish background */
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(255, 182, 193, 0.4);
+  text-align: center;
+}
+
+.extra-description p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #4a2c2a;
+  margin-bottom: 15px;
+}
+/* Reuse existing content styles */
+.content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1000px;
+  margin: 60px auto;
+  gap: 40px;
+  padding: 20px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.description {
+  flex: 1;
+  background: rgba(240, 248, 255, 0.75);
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(255, 182, 193, 0.5);
+  padding: 20px;
+  text-align: justify;
+}
+
+.image-section {
+  flex: 1;
+  text-align: center;
+}
+
+.image-section img {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(255, 182, 193, 0.5);
+  transition: transform 0.3s ease;
+}
+
+.image-section img:hover {
+  transform: scale(1.03);
+}
+
+/* Button container inside the left column, centered under description */
+.button-container {
+  text-align: center; /* centers the button horizontally within description column */
+  margin-top: 20px;   /* spacing from the description box */
+}
+
+.collection-button {
+  display: inline-block;
+  padding: 12px 25px;
+  background: #5e366e;
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 25px;
+  text-decoration: none;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.collection-button:hover {
+  background: #e4b6ff;
+  color: #4a2c2a;
+  transform: scale(1.05);
+}

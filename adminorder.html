@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Orders — Bloom & Thread</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+
+<style>
+/* Base Reset */
+body, html { margin:0; padding:0; font-family: 'Poppins', sans-serif; background:#f7f2f5; color:#4b3b4c; height:100%; }
+body { display:flex; }
+
+/* Sidebar */
+.sidebar {
+  width:240px; background:#fff0f5; padding:2rem 1rem;
+  display:flex; flex-direction:column; align-items:center;
+  border-right:1px solid #e0cbbf; box-shadow:2px 0 15px rgba(0,0,0,0.05);
+  position:fixed; height:100%;
+}
+.sidebar img { width:80px; height:80px; border-radius:50%; object-fit:cover; }
+.sidebar h2 { margin-top:0.5rem; font-size:1.3rem; color:#b85c8a; }
+.sidebar p { font-size:0.9rem; color:#9e718a; margin-bottom:2rem; }
+.sidebar ul { list-style:none; padding:0; width:100%; }
+.sidebar ul li { margin:0.5rem 0; }
+.sidebar ul li a {
+  display:flex; align-items:center; text-decoration:none; padding:0.7rem 1rem;
+  border-radius:10px; color:#4b3b4c; transition:0.3s;
+}
+.sidebar ul li a:hover,
+.sidebar ul li a.active { background:#ffd6e7; color:#b85c8a; font-weight:600; }
+.sidebar ul li a i { margin-right:10px; }
+
+/* Content Wrapper */
+.content-wrapper { margin-left:240px; display:flex; flex-direction:column; min-height:100vh; flex:1; }
+main { flex:1; padding:20px; overflow-y:auto; }
+header {
+  background:linear-gradient(135deg, #ffb6c1, #ffdee9);
+  padding:20px; font-size:1.5rem; font-weight:600; color:#4b3b4c;
+  border-radius:12px; margin-bottom:20px; box-shadow:0 3px 8px rgba(0,0,0,0.1);
+}
+
+/* Stats Cards */
+.stats-container { display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px; }
+.stat-card {
+  background:white; flex:1 1 180px; border-radius:12px; padding:20px;
+  text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+.stat-card h3 { margin-bottom:10px; color:#b85c8a; }
+.stat-card p { font-size:1.2rem; font-weight:600; }
+
+/* Table */
+.table-container { margin-bottom:30px; overflow-x:auto; }
+table {
+  width:100%; border-collapse:collapse; background:white;
+  border-radius:12px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.05);
+}
+th, td { padding:12px 15px; text-align:center; border-bottom:1px solid #eee; }
+th { background:#ffdee9; font-weight:600; }
+td button {
+  padding:6px 12px; border-radius:8px; border:none; cursor:pointer;
+  font-weight:600; margin:2px;
+}
+.view-btn { background:#b85c8a; color:#fff; }
+.view-btn:hover { background:#93315c; }
+.remove-btn { background:#ff6b81; color:#fff; }
+.remove-btn:hover { background:#e04e63; }
+.status-select { padding:5px 10px; border-radius:8px; border:1px solid #ccc; font-weight:600; cursor:pointer; }
+
+/* Modal */
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:999; }
+.modal-content { background:white; padding:20px; border-radius:12px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; text-align:center; }
+.modal-content img { max-width:100%; border-radius:12px; margin-top:15px; }
+.modal-close { position:absolute; top:15px; right:20px; font-size:1.5rem; color:white; cursor:pointer; }
+
+/* Footer */
+footer { text-align:center; padding:10px 0; font-size:0.9rem; color:#999; margin-top:auto; }
+
+/* Responsive */
+@media(max-width:768px){
+  body { flex-direction:column; }
+  .sidebar { width:100%; flex-direction:row; justify-content:space-around; padding:1rem; }
+  .content-wrapper { margin-left:0; }
+  main { padding:15px; }
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <img src="images/admin-avatar.png" alt="Admin Avatar">
+  <h2>Admin</h2>
+  <p>Administrator</p>
+  <ul>
+    <li><a href="admin.html"><i class="ri-dashboard-line"></i> Dashboard</a></li>
+    <li><a href="adminorder.html" class=><i class="ri-shopping-bag-3-line"></i> Orders</a></li>
+    <li><a href="inventory.html"><i class="ri-archive-2-line"></i> Inventory</a></li>
+    <li><a href="supplier.html"><i class="ri-truck-line"></i> Suppliers</a></li>
+    <li><a href="reports.html"><i class="ri-bar-chart-2-line"></i> Reports</a></li>
+    <li><a href="#" id="logoutLink"><i class="ri-logout-circle-line"></i> Logout</a></li>
+  </ul>
+</aside>
+
+<div class="content-wrapper">
+  <main>
+    <header>Orders Management</header>
+
+    <div class="stats-container">
+      <div class="stat-card"><h3>✅ Sold</h3><p id="soldCount">0</p></div>
+      <div class="stat-card"><h3>⏳ Pending</h3><p id="pendingCount">0</p></div>
+      <div class="stat-card"><h3>🚚 Out for Delivery</h3><p id="outForDeliveryCount">0</p></div>
+      <div class="stat-card"><h3>❌ Cancelled</h3><p id="cancelledCount">0</p></div>
+      <div class="stat-card"><h3>🚫 Rejected</h3><p id="rejectedCount">0</p></div>
+    </div>
+
+    <div class="table-container">
+      <h2 style="text-align:center; margin-bottom:10px;">Orders</h2>
+      <table id="ordersTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Contact</th>
+            <th>Items</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>&copy; 2025 Bloom & Thread. All rights reserved.</footer>
+</div>
+
+<!-- Modal -->
+<div id="imageModal" class="modal">
+  <span class="modal-close" onclick="closeImageModal()">&times;</span>
+  <div class="modal-content"><img id="modalImage" src="" alt="Preview"></div>
+</div>
+
+<script>
+// Logout
+document.getElementById('logoutLink').addEventListener('click', e=>{
+  e.preventDefault();
+  localStorage.clear();
+  window.location.href='login.html';
+});
+
+// Stats
+function updateStats() {
+  const orders = JSON.parse(localStorage.getItem('orders')) || [];
+  let sold=0, pending=0, outForDelivery=0, cancelled=0, rejected=0;
+  orders.forEach(o=>{
+    if(o.status==='Delivered') sold++;
+    else if(o.status==='Pending') pending++;
+    else if(o.status==='Out for Delivery') outForDelivery++;
+    else if(o.status==='Cancelled') cancelled++;
+    else if(o.status==='Rejected') rejected++;
+  });
+  document.getElementById('soldCount').textContent = sold;
+  document.getElementById('pendingCount').textContent = pending;
+  document.getElementById('outForDeliveryCount').textContent = outForDelivery;
+  document.getElementById('cancelledCount').textContent = cancelled;
+  document.getElementById('rejectedCount').textContent = rejected;
+}
+
+// Orders Table
+const ordersTableBody = document.querySelector('#ordersTable tbody');
+function loadOrders(){
+  const orders = JSON.parse(localStorage.getItem('orders'))||[];
+  ordersTableBody.innerHTML = '';
+  if(!orders.length){
+    ordersTableBody.innerHTML = '<tr><td colspan="6">No orders found.</td></tr>';
+    return;
+  }
+  orders.forEach((o,i)=>{
+    const items = (o.cart||[]).map(it=>`${it.title} (${it.quantity})`).join(', ');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${o.customerName||'N/A'}</td>
+      <td>${o.customerContact||'N/A'}</td>
+      <td>${items||'—'}</td>
+      <td>
+        <select class="status-select" onchange="updateOrderStatus(${i},this.value)">
+          <option value="Pending" ${o.status==='Pending'?'selected':''}>Pending</option>
+          <option value="Out for Delivery" ${o.status==='Out for Delivery'?'selected':''}>Out for Delivery</option>
+          <option value="Delivered" ${o.status==='Delivered'?'selected':''}>Delivered</option>
+          <option value="Cancelled" ${o.status==='Cancelled'?'selected':''}>Cancelled</option>
+          <option value="Rejected" ${o.status==='Rejected'?'selected':''}>Rejected</option>
+        </select>
+      </td>
+      <td>
+        <button class="view-btn" onclick="viewOrder(${i})">View</button>
+        <button class="remove-btn" onclick="removeOrder(${i})">Remove</button>
+      </td>
+    `;
+    ordersTableBody.appendChild(tr);
+  });
+  updateStats();
+}
+
+function updateOrderStatus(index,status){
+  const orders = JSON.parse(localStorage.getItem('orders'))||[];
+  if(!orders[index]) return;
+  orders[index].status = status;
+  localStorage.setItem('orders', JSON.stringify(orders));
+  loadOrders();
+}
+
+function removeOrder(index){
+  const orders = JSON.parse(localStorage.getItem('orders'))||[];
+  if(!orders[index]) return;
+  if(confirm('Remove this order?')){
+    orders.splice(index,1);
+    localStorage.setItem('orders', JSON.stringify(orders));
+    loadOrders();
+  }
+}
+
+function viewOrder(index){
+  const orders = JSON.parse(localStorage.getItem('orders'))||[];
+  const order = orders[index];
+  if(!order) return;
+  alert(`Customer: ${order.customerName}\nItems: ${(order.cart||[]).map(i=>i.title).join(', ')}`);
+}
+
+// Image modal
+function showImageModal(src){
+  document.getElementById('modalImage').src=src;
+  document.getElementById('imageModal').style.display='flex';
+}
+function closeImageModal(){ document.getElementById('imageModal').style.display='none'; }
+
+window.addEventListener("storage", e=>{
+  if(e.key==="orders") loadOrders();
+});
+
+loadOrders();
+</script>
+</body>
+</html>

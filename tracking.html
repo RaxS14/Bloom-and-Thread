@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom & Thread - Track Orders</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+<style>
+html, body { margin:0; padding:0; height:100%; font-family:'Poppins',sans-serif; }
+body { display:flex; flex-direction:column; min-height:100vh; }
+nav { padding:10px 20px; background: rgba(255,182,193,0.3); }
+nav .logo { font-weight:bold; color:#4a2c2a; text-decoration:none; }
+main { flex:1; }
+h1 { text-align:center; color:#4a2c2a; margin:20px 0; }
+#orders-container { width:100%; height: calc(100vh - 120px); }
+.order-status { text-align:center; color:#5e366e; font-weight:600; margin-bottom:10px; }
+footer { background: rgba(94,54,110,0.9); color:#fff; padding:20px 0; text-align:center; font-size:0.95rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Bloom & Thread</a>
+</nav>
+
+<main>
+  <h1>Track Your Orders</h1>
+  <div id="orders-container"></div>
+</main>
+
+<footer>
+  <p>&copy; 2025 Bloom & Thread. All rights reserved.</p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+<script>
+// ===== Constants =====
+const VALID_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA5MDUyYzIyYzc4NDRhMTBiZjE3M2I1NGRlYmFmMTNiIiwiaCI6Im11cm11cjY0In0=';
+
+// ===== API Key Check =====
+const urlParams = new URLSearchParams(window.location.search);
+let apiKey = urlParams.get('apiKey') || localStorage.getItem('bloom_api_key');
+if (!urlParams.get('apiKey')) localStorage.setItem('bloom_api_key', apiKey);
+
+const container = document.getElementById('orders-container');
+
+if (apiKey !== VALID_API_KEY) {
+  container.innerHTML = '<p style="text-align:center; color:red;">Invalid API Key. Cannot track orders.</p>';
+} else {
+  renderOrders();
+  setInterval(updateStatuses, 1000); // Live status updates
+}
+
+// ===== Functions =====
+function updateStatuses() {
+  const orders = JSON.parse(localStorage.getItem('orders')) || [];
+  document.querySelectorAll('.order-status').forEach((el, idx) => {
+    if (orders[idx]) el.textContent = `Order #${idx+1} — Status: ${orders[idx].status}`;
+  });
+}
+
+function renderOrders() {
+  const orders = JSON.parse(localStorage.getItem('orders')) || [];
+  container.innerHTML = '';
+  if (orders.length === 0) {
+    container.innerHTML = '<p style="text-align:center; color:#5e366e;">No orders found.</p>';
+    return;
+  }
+
+  orders.forEach((order, idx) => {
+    const orderDiv = document.createElement('div');
+    orderDiv.style.width = '100%';
+    orderDiv.style.height = '100%';
+    container.appendChild(orderDiv);
+
+    // Status display
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'order-status';
+    statusDiv.textContent = `Order #${idx+1} — Status: ${order.status}`;
+    orderDiv.appendChild(statusDiv);
+
+    // Map container
+    const mapDiv = document.createElement('div');
+    mapDiv.id = `map-${idx}`;
+    mapDiv.style.width = '100%';
+    mapDiv.style.height = '90%';
+    orderDiv.appendChild(mapDiv);
+
+    // Coordinates
+    const business = { lat: 10.2980, lng: 123.8646 }; // Bloom & Thread shop
+    const delivery = { lat: Number(order.delivery.lat), lng: Number(order.delivery.lng) };
+
+    const map = L.map(mapDiv.id, { zoomControl: true }).setView(
+      [(business.lat + delivery.lat)/2, (business.lng + delivery.lng)/2],
+      14
+    );
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
+
+    // Route
+    const routeControl = L.Routing.control({
+      waypoints: [L.latLng(business.lat, business.lng), L.latLng(delivery.lat, delivery.lng)],
+      createMarker: () => null,
+      lineOptions: { styles: [{ color: 'red', weight: 5 }] },
+      addWaypoints: false,
+      draggableWaypoints: false
+    }).addTo(map);
+
+    // Markers
+    L.marker([business.lat, business.lng]).addTo(map).bindPopup('Bloom & Thread - Basak Pardo, Cebu City');
+    L.marker([delivery.lat, delivery.lng]).addTo(map).bindPopup('Delivery Location');
+
+    const courierIcon = L.divIcon({ html: '🏍️', iconSize: [40,40], className:'courier-icon' });
+    const courierMarker = L.marker([business.lat, business.lng], { icon: courierIcon }).addTo(map);
+
+    let routeCoords = [];
+    let animInterval = null;
+
+    routeControl.on('routesfound', e => {
+      routeCoords = e.routes[0].coordinates.map(c => [c.lat, c.lng]);
+      handleAnimation();
+    });
+
+    function handleAnimation() {
+      if ((order.status !== 'On the Way' && order.status !== 'Out for Delivery') || routeCoords.length === 0) {
+        if (animInterval) clearInterval(animInterval);
+        return;
+      }
+      let i = 0;
+      if (animInterval) clearInterval(animInterval);
+      animInterval = setInterval(() => {
+        if (i >= routeCoords.length || (order.status !== 'On the Way' && order.status !== 'Out for Delivery')) {
+          clearInterval(animInterval);
+          return;
+        }
+        courierMarker.setLatLng(routeCoords[i]);
+        i++;
+      }, 200);
+    }
+
+    // Live status watcher
+    const watcher = setInterval(() => {
+      const updatedOrders = JSON.parse(localStorage.getItem('orders')) || [];
+      const updatedOrder = updatedOrders[idx];
+      if (!updatedOrder) {
+        clearInterval(watcher);
+        return;
+      }
+      if (order.status !== updatedOrder.status) {
+        order.status = updatedOrder.status;
+        statusDiv.textContent = `Order #${idx+1} — Status: ${order.status}`;
+        handleAnimation();
+      }
+    }, 1000);
+  });
+}
+</script>
+</body>
+</html>

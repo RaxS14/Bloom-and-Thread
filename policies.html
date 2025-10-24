@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom & Thread — Policies</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+  /* === General Styles === */
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    color: #4a2c2a;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #fff;
+    text-align: left;
+  }
+
+  /* === Background Overlay === */
+  .background-overlay {
+    background: url('thread.png') no-repeat center center fixed;
+    background-size: cover;
+    filter: blur(1px) brightness(1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+  }
+
+  /* === Navbar === */
+  .navbar {
+    width: 100%;
+    background: rgba(94, 54, 110, 0.9);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .nav-container {
+    max-width: 1700px;
+    margin: 0 auto;
+    padding: 23px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: 'Great Vibes', cursive;
+    color: #ffffff;
+    font-size: 1.8rem;
+    text-decoration: none;
+  }
+
+  .nav-links {
+    list-style: none;
+    display: flex;
+    gap: 25px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-links li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+
+  .nav-links li a:hover,
+  .nav-links li a.active {
+    color: #ffb6c1;
+  }
+
+  /* === Header === */
+  header {
+    background: #b85c8a;
+    color: #fff;
+    text-align: center;
+    padding: 25px 15px;
+    font-family: 'Great Vibes', cursive;
+    font-size: 2rem;
+  }
+
+  /* === Main Content === */
+  main {
+    flex: 1;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+    background: rgba(255, 240, 245, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(255, 182, 193, 0.4);
+    position: relative;
+  }
+
+  h2 {
+    color: #b85c8a;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    font-family: 'Great Vibes', cursive;
+    font-size: 1.8rem;
+    border-bottom: 2px solid #b85c8a;
+    display: inline-block;
+    padding-bottom: 3px;
+  }
+
+  p, li {
+    margin-bottom: 12px;
+    color: #5e366e;
+  }
+
+  ul {
+    margin-left: 20px;
+  }
+
+  /* === Table of Contents === */
+  .toc {
+    margin-bottom: 30px;
+    padding: 15px 20px;
+    background: #fff0f5;
+    border-left: 5px solid #b85c8a;
+    border-radius: 8px;
+  }
+
+  .toc a {
+    display: block;
+    color: #5e366e;
+    text-decoration: none;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .toc a:hover {
+    color: #b85c8a;
+  }
+
+  /* === Footer === */
+  footer {
+    background: rgba(94, 54, 110, 0.9);
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 0.95rem;
+    margin-top: 40px;
+  }
+
+  /* === Back to Top Button === */
+  #backToTop {
+    display: none;
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 100;
+    font-size: 16px;
+    border: none;
+    outline: none;
+    background-color: #b85c8a;
+    color: white;
+    cursor: pointer;
+    padding: 12px 16px;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: background 0.3s, transform 0.3s;
+  }
+
+  #backToTop:hover {
+    background-color: #5e366e;
+    transform: scale(1.1);
+  }
+</style>
+</head>
+<body>
+
+<div class="background-overlay"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="logo">Bloom & Thread</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="collection.html">Collection</a></li>
+      <li><a href="cart.html">Cart</a></li>
+      <li><a href="order.html">Order</a></li>
+      <li><a href="reviews.html">Reviews</a></li>
+      <li><a href="contactus.html">Contact Us</a></li>
+      <li><a href="policies.html">Policies</a></li>
+      <li><a href="logout.html">Logout</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header>Bloom & Thread — Policies</header>
+
+<main>
+  <!-- Table of Contents -->
+  <div class="toc">
+    <strong>Table of Contents:</strong>
+    <a href="#privacy-policy">Privacy Policy</a>
+    <a href="#terms-conditions">Terms & Conditions</a>
+    <a href="#refund-policy">Refund & Return Policy</a>
+    <a href="#supplier-info">Supplier Information</a>
+  </div>
+
+  <section id="privacy-policy">
+    <h2>Privacy Policy</h2>
+    <p>
+      At Bloom & Thread, we value your privacy. Any personal information you provide, such as your name, contact number, and delivery address, will only be used to process and deliver your orders. We do not share, sell, or trade your information with third parties. All payment details, such as GCash transactions, remain private and secure.
+    </p>
+  </section>
+
+  <section id="terms-conditions">
+    <h2>Terms & Conditions</h2>
+    <ul>
+      <li>All crochet products are handmade, so slight variations in size, color, and design may occur.</li>
+      <li>Prices are subject to change without prior notice.</li>
+      <li>Orders are confirmed only after full or partial payment is received (depending on agreement).</li>
+      <li>Customers are responsible for providing correct delivery details.</li>
+      <li>We reserve the right to decline or cancel orders if necessary (e.g., incomplete details, unavailable materials).</li>
+    </ul>
+  </section>
+
+  <section id="refund-policy">
+    <h2>Refund & Return Policy</h2>
+    <ul>
+      <li>Due to the handmade nature of our items, all sales are final.</li>
+      <li>Refunds or returns are only accepted if the product delivered is damaged or incorrect.</li>
+      <li>To request a return/refund, please contact us within 3 days of receiving your order with proof (photo/video).</li>
+      <li>Items must be unused and in their original condition.</li>
+      <li>For approved refunds, payment will be returned through GCash or the original payment method within 7–10 business days.</li>
+    </ul>
+  </section>
+
+  <section id="supplier-info">
+    <h2>Supplier Information</h2>
+    <p>
+      Our raw materials for all crochet products are sourced from Shopee, ensuring high-quality fabrics, yarns, and accessories for every creation.
+    </p>
+  </section>
+</main>
+
+<footer>
+  &copy; 2025 Bloom & Thread. All rights reserved.
+</footer>
+
+<!-- Back to Top Button -->
+<button onclick="scrollToTop()" id="backToTop" title="Back to Top">↑</button>
+
+<script>
+  // Show button when scrolled down
+  window.onscroll = function() {
+    const btn = document.getElementById("backToTop");
+    if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+      btn.style.display = "block";
+    } else {
+      btn.style.display = "none";
+    }
+  };
+
+  // Scroll to top function
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>

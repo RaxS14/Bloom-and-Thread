@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom & Thread - Cart</title>
+<link rel="stylesheet" href="collection.css">
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  body { margin: 0; font-family: 'Poppins', sans-serif; }
+  .cart-container { max-width: 1000px; margin: 80px auto 50px; padding: 0 20px; }
+  .cart-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 240, 245, 0.8); padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(255, 182, 193, 0.4); }
+  .cart-item img { width: 100px; border-radius: 10px; }
+  .cart-details { flex: 1; margin-left: 20px; text-align: left; }
+  .cart-details h3 { margin: 0 0 5px; font-size: 1.1rem; color: #4a2c2a; }
+  .cart-details p { margin: 0; color: #5e366e; font-weight: 600; }
+  .item-controls { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
+  .item-controls button { padding: 5px 12px; border: none; border-radius: 10px; background: #5e366e; color: #fff; font-weight: 600; cursor: pointer; transition: background 0.3s, transform 0.2s; }
+  .item-controls button:hover { background: #ffb6c1; color: #4a2c2a; transform: scale(1.05); }
+  .item-controls span.quantity { min-width: 25px; text-align: center; display: inline-block; }
+  .cart-total { text-align: right; font-size: 1.2rem; font-weight: 700; margin-top: 20px; color: #5e366e; }
+  button.action-btn, #place-order, .remove-btn { margin: 20px 10px 0 0; padding: 10px 20px; background: #5e366e; color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+  button.action-btn:hover, #place-order:hover, .remove-btn:hover { background: #ffb6c1; color: #4a2c2a; }
+  .popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); z-index: 1000; transition: 0.3s ease; opacity: 0; }
+  .popup.show { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .popup h3 { margin-top: 0; color: #5e366e; }
+  .popup img { width: 200px; margin-top: 10px; border-radius: 10px; }
+  .popup input[type="file"] { margin-top: 10px; }
+  .popup #receipt-preview img { width: 150px; margin-right: 10px; margin-top: 10px; border-radius: 10px; }
+  .popup button.close-popup { margin-top: 15px; padding: 8px 15px; background: #5e366e; color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+  .popup button.close-popup:hover { background: #ffb6c1; color: #4a2c2a; }
+  #map-popup #map { width: 600px; height: 400px; border-radius: 15px; }
+  @media (max-width: 650px) { #map-popup #map { width: 90%; height: 300px; } }
+  .user-info { margin-top: 20px; text-align: left; }
+  .user-info label { display: block; margin-bottom: 5px; font-weight: 600; color: #4a2c2a; }
+  .user-info input { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ccc; }
+  .payment-methods { margin-top: 15px; }
+  .payment-methods label { margin-right: 20px; font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="background-overlay"></div>
+
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="logo">Bloom & Thread</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="collection.html">Collection</a></li>
+      <li><a href="cart.html">Cart</a></li>
+      <li><a href="order.html">Order</a></li>
+      <li><a href="reviews.html">Reviews</a></li>
+      <li><a href="contactus.html">Contact Us</a></li>
+      <li><a href="policies.html">Policies</a></li>
+      <li><a href="logout.html">Logout</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="cart-container">
+  <h1>Your Cart</h1>
+  <div id="cart-items"></div>
+  <p class="cart-total">Total: ₱<span id="total-price">0</span></p>
+
+  <!-- Payment Methods -->
+  <div class="payment-methods">
+    <label><input type="radio" name="payment-method" value="COD" checked> Cash on Delivery</label>
+    <label><input type="radio" name="payment-method" value="GCash"> GCash</label>
+  </div>
+
+  <div id="gcash-section" style="display:none; margin-top:15px;">
+    <h3>Payment Method: GCash</h3>
+    <p>Number: 09121371350</p>
+    <p>Name: Cherry Mae Piquero</p>
+    <img src="images/gcash-qr-code.jpg" alt="GCash QR Code">
+    <p>Upload 1-2 receipt images as proof:</p>
+    <input type="file" id="receipt1" accept="image/*">
+    <input type="file" id="receipt2" accept="image/*">
+    <div id="receipt-preview"></div>
+  </div>
+
+  <button id="open-map" class="action-btn">Select Delivery Location</button>
+
+  <div class="user-info">
+    <label for="customer-name">Name:</label>
+    <input type="text" id="customer-name" placeholder="Enter your name" required>
+    <label for="customer-contact">Contact Number:</label>
+    <input type="text" id="customer-contact" placeholder="Enter your contact number" required>
+  </div>
+
+  <button id="place-order">Place Order</button>
+
+  <!-- Map Popup -->
+  <div id="map-popup" class="popup">
+    <h3>Pin Your Delivery Location</h3>
+    <div id="map"></div>
+    <button class="close-popup">Close</button>
+  </div>
+</div>
+
+<footer>
+  <p>&copy; 2025 Bloom & Thread. All rights reserved.</p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const cartItemsContainer = document.getElementById('cart-items');
+const totalPriceSpan = document.getElementById('total-price');
+const placeOrderBtn = document.getElementById('place-order');
+
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let bloom_inventory = JSON.parse(localStorage.getItem('bloom_inventory')) || [];
+
+// Render cart
+function renderCart() {
+  cartItemsContainer.innerHTML = '';
+  let total = 0;
+
+  cart.forEach((item, index) => {
+    const product = bloom_inventory.find(p => p.id === item.id);
+    const price = product ? Number(product.price) : 0;
+    item.price = price;
+    const subtotal = price * item.quantity;
+    item.subtotal = subtotal;
+    total += subtotal;
+
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    div.innerHTML = `
+      <img src="${item.imgSrc}" alt="${item.title}">
+      <div class="cart-details">
+        <h3>${item.title}</h3>
+        <p>Unit Price: ₱${price.toLocaleString()}</p>
+        <p>Subtotal: ₱${subtotal.toLocaleString()}</p>
+        <div class="item-controls">
+          <button class="decrease" data-index="${index}">-</button>
+          <span class="quantity">${item.quantity}</span>
+          <button class="increase" data-index="${index}">+</button>
+        </div>
+      </div>
+      <button class="remove-btn" data-index="${index}">Remove</button>
+    `;
+    cartItemsContainer.appendChild(div);
+  });
+
+  totalPriceSpan.textContent = total.toLocaleString();
+
+  cartItemsContainer.querySelectorAll('.increase').forEach(btn => {
+    btn.onclick = e => { 
+      const idx = e.target.dataset.index; 
+      cart[idx].quantity++; 
+      localStorage.setItem('cart', JSON.stringify(cart)); 
+      renderCart(); 
+    };
+  });
+  cartItemsContainer.querySelectorAll('.decrease').forEach(btn => {
+    btn.onclick = e => { 
+      const idx = e.target.dataset.index; 
+      if(cart[idx].quantity>1) cart[idx].quantity--; else cart.splice(idx,1);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      renderCart();
+    };
+  });
+  cartItemsContainer.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.onclick = e => { 
+      const idx = e.target.dataset.index; 
+      cart.splice(idx,1);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      renderCart();
+    };
+  });
+
+  localStorage.setItem('cart', JSON.stringify(cart));
+}
+
+renderCart();
+
+// Payment toggle
+const paymentRadios = document.querySelectorAll('input[name="payment-method"]');
+const gcashSection = document.getElementById('gcash-section');
+const receipt1 = document.getElementById('receipt1');
+const receipt2 = document.getElementById('receipt2');
+const receiptPreview = document.getElementById('receipt-preview');
+
+paymentRadios.forEach(radio => {
+  radio.addEventListener('change', () => {
+    if(radio.value === 'GCash') gcashSection.style.display='block';
+    else { gcashSection.style.display='none'; receiptPreview.innerHTML=''; receipt1.value=''; receipt2.value=''; }
+  });
+});
+
+// Receipt preview
+function previewReceipt(fileInput) {
+  const file = fileInput.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.createElement('img');
+    img.src = e.target.result;
+    receiptPreview.appendChild(img);
+  };
+  reader.readAsDataURL(file);
+}
+receipt1.addEventListener('change', ()=>{receiptPreview.innerHTML=''; previewReceipt(receipt1);});
+receipt2.addEventListener('change', ()=>previewReceipt(receipt2));
+
+// Map popup
+const mapPopup = document.getElementById('map-popup');
+document.getElementById('open-map').addEventListener('click', ()=>{
+  mapPopup.classList.add('show');
+  setTimeout(()=>map.invalidateSize(),300);
+});
+mapPopup.querySelector('.close-popup').addEventListener('click', ()=>mapPopup.classList.remove('show'));
+
+// Leaflet map
+const map = L.map('map').setView([10.291,123.903],14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+let deliveryMarker = L.marker([10.291,123.903],{draggable:true}).addTo(map)
+.bindPopup("Drag this pin to select your delivery location").openPopup();
+map.on('click', e=> deliveryMarker.setLatLng(e.latlng).openPopup());
+
+// Convert file to base64
+async function getDataURL(file){
+  return new Promise(resolve=>{
+    const reader = new FileReader();
+    reader.onload = e=>resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+// Place Order
+placeOrderBtn.addEventListener('click', async ()=>{
+  const selectedPayment = document.querySelector('input[name="payment-method"]:checked').value;
+  const receipts = [];
+  if(selectedPayment==='GCash'){
+    if(receipt1.files[0]) receipts.push(await getDataURL(receipt1.files[0]));
+    if(receipt2.files[0]) receipts.push(await getDataURL(receipt2.files[0]));
+    if(receipts.length===0){ alert("Please upload at least one GCash receipt!"); return; }
+  }
+
+  const customerName = document.getElementById('customer-name').value.trim();
+  const customerContact = document.getElementById('customer-contact').value.trim();
+  if(!customerName||!customerContact){ alert("Please enter your name and contact number!"); return; }
+  if(cart.length===0){ alert("Your cart is empty!"); return; }
+
+  const newOrder = {
+    cart,
+    delivery: deliveryMarker.getLatLng(),
+    receipts,
+    paymentMethod: selectedPayment,
+    status: 'Waiting for Confirmation',
+    timestamp: new Date().getTime(),
+    customerName,
+    customerContact
+  };
+
+  const orders = JSON.parse(localStorage.getItem('orders')) || [];
+  orders.push(newOrder);
+  localStorage.setItem('orders', JSON.stringify(orders));
+
+  cart = [];
+  localStorage.setItem('cart', JSON.stringify(cart));
+
+  window.location.href='order.html';
+});
+</script>
+</body>
+</html>

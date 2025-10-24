@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom & Thread - Order Details</title>
+<link rel="stylesheet" href="index.css">
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body { display:flex; flex-direction:column; min-height:100vh; margin:0; }
+  main { flex:1; }
+  .order-container { max-width:1000px; margin:100px auto 50px; padding:30px 20px; background:rgba(255,240,245,0.85); border-radius:15px; box-shadow:0 4px 20px rgba(255,182,193,0.4); }
+  h1 { color:#4a2c2a; text-align:center; margin-bottom:30px; }
+  .single-order { margin-bottom:40px; padding:20px; border-radius:15px; background:rgba(255,255,255,0.85); box-shadow:0 4px 10px rgba(255,182,193,0.3); }
+  .order-item { display:flex; align-items:center; margin-bottom:10px; }
+  .order-item img { width:100px; border-radius:10px; margin-right:15px; }
+  .order-details { flex:1; }
+  .order-details h3 { margin:0 0 5px; font-size:1.1rem; color:#4a2c2a; }
+  .order-details p { margin:2px 0; color:#5e366e; font-weight:600; }
+  .order-total { text-align:right; font-size:1.2rem; font-weight:700; margin-top:10px; color:#5e366e; }
+  .status { font-weight:700; color:#5e366e; font-size:1.2rem; margin:10px 0; }
+  .receipt-container { margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; }
+  .receipt-container img { width:150px; border-radius:10px; cursor:pointer; transition:transform 0.2s; }
+  .receipt-container img:hover { transform:scale(1.05); }
+  footer { margin-top:auto; background:rgba(94,54,110,0.9); color:#fff; padding:20px 0; text-align:center; font-size:0.95rem; }
+  .order-buttons button { margin-right:8px; padding:6px 12px; background:#5e366e; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600; }
+  .order-buttons button.cancel { background:#e57373; }
+
+  /* Toast Notification */
+  .toast {
+    background:#5e366e;
+    color:#fff;
+    padding:12px 18px;
+    margin-bottom:8px;
+    border-radius:8px;
+    box-shadow:0 3px 8px rgba(0,0,0,0.2);
+    opacity:0;
+    transform: translateX(100%);
+    transition: all 0.5s ease;
+    font-weight:600;
+  }
+  .toast.show { opacity:1; transform: translateX(0); }
+</style>
+</head>
+<body>
+
+<div class="background-overlay"></div>
+
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="logo">Bloom & Thread</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="collection.html">Collection</a></li>
+      <li><a href="cart.html">Cart</a></li>
+      <li><a href="order.html" class="active">Order</a></li>
+      <li><a href="reviews.html">Reviews</a></li>
+      <li><a href="contactus.html">Contact Us</a></li>
+      <li><a href="policies.html">Policies</a></li>
+      <li><a href="logout.html">Logout</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main>
+  <div class="order-container" id="orders-container">
+    <h1>Your Orders</h1>
+    <div id="all-orders"></div>
+  </div>
+</main>
+
+<footer>
+  <p>&copy; 2025 Bloom & Thread. All rights reserved.</p>
+</footer>
+
+<!-- Toast container -->
+<div id="toast-container" style="position: fixed; top:20px; right:20px; z-index:9999;"></div>
+
+<script>
+const allOrdersContainer = document.getElementById('all-orders');
+
+// ===== Toast Notification =====
+function showToast(message, duration = 3000) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 100);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => container.removeChild(toast), 500);
+  }, duration);
+}
+
+// ===== Track previous order statuses =====
+let previousOrders = JSON.parse(localStorage.getItem('orders')) || [];
+
+// ===== Load Orders =====
+function loadOrders() {
+  const orders = JSON.parse(localStorage.getItem('orders')) || [];
+
+  // Check for status changes
+  orders.forEach((order, idx) => {
+    const prev = previousOrders[idx];
+    if (prev && prev.status !== order.status) {
+      showToast(`🔔 Order #${idx + 1} status changed to "${order.status}"`);
+    }
+  });
+  previousOrders = JSON.parse(JSON.stringify(orders)); // Deep copy
+
+  allOrdersContainer.innerHTML = '';
+  if (!orders.length) {
+    allOrdersContainer.innerHTML = '<p>No orders yet.</p>';
+    return;
+  }
+
+  orders.forEach((order, idx) => {
+    const orderDiv = document.createElement('div');
+    orderDiv.className = 'single-order';
+
+    let itemsHTML = '';
+    let total = 0;
+    (order.cart || []).forEach(item => {
+      const itemTotal = Number(item.price) * item.quantity;
+      total += itemTotal;
+      itemsHTML += `
+        <div class="order-item">
+          <img src="${item.imgSrc || item.image || 'images/no-image.jpg'}" alt="${item.title}">
+          <div class="order-details">
+            <h3>${item.title}</h3>
+            <p>₱${item.price} x ${item.quantity} = ₱${itemTotal}</p>
+          </div>
+        </div>
+      `;
+    });
+
+    const customerInfoHTML = `
+      <p><strong>Customer Name:</strong> ${order.customerName || 'N/A'}</p>
+      <p><strong>Contact Number:</strong> ${order.customerContact || 'N/A'}</p>
+    `;
+
+    let receiptsHTML = '';
+    if (order.receipts && order.receipts.length > 0) {
+      receiptsHTML = '<div class="receipt-container">';
+      order.receipts.forEach(receipt => {
+        receiptsHTML += `<img src="${receipt}" alt="Receipt" onclick="window.open('${receipt}')">`;
+      });
+      receiptsHTML += '</div>';
+    }
+
+    const uploadSection = `
+      <div style="margin-top:10px;">
+        <label for="receiptInput_${idx}" style="font-weight:600;">Upload Receipt:</label>
+        <input type="file" id="receiptInput_${idx}" accept="image/*" style="display:block;margin-top:5px;">
+        <button onclick="uploadReceipt(${idx})" 
+                style="margin-top:8px;padding:8px 14px;background:#5e366e;color:#fff;border:none;border-radius:6px;cursor:pointer;">
+          Upload
+        </button>
+      </div>
+    `;
+
+    const trackButtonHTML = `
+      <div style="text-align:right; margin-top:10px;">
+        <a href="tracking.html?apiKey=${localStorage.getItem('bloom_api_key')}" 
+           style="display:inline-block; padding:8px 15px; background:#5e366e; color:#fff; border-radius:8px; text-decoration:none; font-weight:600;">
+          Track Order
+        </a>
+      </div>
+    `;
+
+    const orderButtonsHTML = `
+      <div class="order-buttons" style="margin-top:10px;">
+        <button onclick="updateStatus(${idx}, 'Cancelled')" class="cancel">Cancel Order</button>
+      </div>
+    `;
+
+    orderDiv.innerHTML = `
+      ${customerInfoHTML}
+      ${itemsHTML}
+      <p class="order-total">Total: ₱${total}</p>
+      <p class="status">Status: <strong id="status_${idx}">${order.status}</strong></p>
+      ${receiptsHTML}
+      ${uploadSection}
+      ${trackButtonHTML}
+      ${orderButtonsHTML}
+    `;
+
+    allOrdersContainer.appendChild(orderDiv);
+  });
+}
+
+// ===== Upload Receipt =====
+function uploadReceipt(index) {
+  const input = document.getElementById(`receiptInput_${index}`);
+  const file = input.files[0];
+  if (!file) return alert("Please choose a file first.");
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const imageBase64 = e.target.result;
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    if (!orders[index].receipts) orders[index].receipts = [];
+    orders[index].receipts.push(imageBase64);
+    localStorage.setItem('orders', JSON.stringify(orders));
+    showToast("✅ Receipt uploaded successfully!");
+    loadOrders();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== Update Status =====
+function updateStatus(index, status) {
+  const orders = JSON.parse(localStorage.getItem('orders')) || [];
+  if (!orders[index]) return;
+  orders[index].status = status;
+  localStorage.setItem('orders', JSON.stringify(orders));
+  showToast(`🔔 Order #${index + 1} status changed to "${status}"`);
+  loadOrders();
+}
+
+// ===== Listen to Storage Changes for live notifications =====
+window.addEventListener('storage', e => {
+  if (e.key === 'orders') loadOrders();
+});
+
+loadOrders();
+setInterval(loadOrders, 1000);
+</script>
+</body>
+</html>
