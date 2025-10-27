@@ -8,7 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
   body { margin:0; font-family: 'Poppins', sans-serif; background:#ffe6f0; }
-  
+
+  /* Sidebar */
   .sidebar {
     position: fixed; left: 0; top: 0; width: 220px; height: 100%; 
     background: #ffb6c1; color: #fff;
@@ -18,7 +19,6 @@
   .sidebar img { width: 80px; border-radius: 50%; margin-bottom: 10px; border: 2px solid #fff; }
   .sidebar h2 { margin: 5px 0; font-size: 1.2rem; }
   .sidebar p { font-size: 0.9rem; margin-bottom: 20px; }
-
   .sidebar ul { list-style: none; padding: 0; width: 100%; }
   .sidebar ul li { width: 100%; }
   .sidebar ul li a {
@@ -28,9 +28,51 @@
   .sidebar ul li a:hover { background: #ff99c8; color: #4a2c2a; }
   .sidebar ul li a i { margin-right: 10px; font-size: 1.1rem; }
 
-  .main-content { margin-left: 220px; padding: 40px; background: #fff0f5; min-height: 100vh; }
-  .main-content h1 { color: #ff69b4; font-size: 2rem; margin-bottom: 20px; }
+  /* Main content */
+  .main-content {
+    margin-left: 220px;
+    padding: 40px;
+    background: #fff0f5;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+
+  .main-content h1 {
+    color: #ff69b4; 
+    font-size: 2rem; 
+    margin-bottom: 20px;
+    text-align: left;
+  }
   .main-content p { font-size: 1.1rem; line-height: 1.6; color: #b30059; }
+
+  .supplier-card {
+    display: flex; justify-content: space-between; align-items: center;
+    background-color: #f9f9f9; border-radius: 10px; padding: 14px 18px;
+    margin-bottom: 12px; border: 1px solid #ffe4d9;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  .supplier-name { font-size: 16px; color: #333; font-weight: 500; }
+  .visit-btn {
+    color: #ff784f; font-weight: 600; text-decoration: none;
+    border: none; background: none; cursor: pointer;
+  }
+  .visit-btn:hover { text-decoration: underline; }
+
+  .hairacc-btn {
+    display: inline-block; width: 100%; max-width: 300px;
+    text-align: center; margin: 8px 0; padding: 12px 0;
+    background-color: #ff784f; color: white; font-weight: 600;
+    border-radius: 12px; text-decoration: none; transition: background 0.3s;
+  }
+  .hairacc-btn:hover { background-color: #e0663c; }
+
+  /* Responsive */
+  @media screen and (max-width: 768px) {
+    .sidebar { position: relative; width: 100%; height: auto; flex-direction: row; justify-content: space-around; padding: 10px; }
+    .sidebar ul { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+    .sidebar ul li a { padding: 8px 10px; font-size: 0.9rem; margin: 2px; }
+    .main-content { margin-left: 0; padding: 20px; }
+  }
 </style>
 </head>
 <body>
@@ -51,13 +93,26 @@
 
 <div class="main-content">
   <h1>Our Role as Supplier</h1>
-  <p>
-    At Bloom & Thread, we supply our carefully crafted products directly to our sellers, ensuring 
-    they have access to high-quality items that delight their customers. We prioritize product excellence, 
-    timely deliveries, and consistent support so our sellers can confidently grow their business. 
-    By providing premium products and reliable service, we help our sellers succeed and maintain the 
-    high standards that Bloom & Thread is known for.
-  </p>
+
+  <p><strong>Our Materials & Suppliers</strong> — At <strong>Bloom And Threads</strong>, every piece begins with carefully chosen materials. We source our yarns, clips, and handles from trusted Shopee suppliers known for their quality and reliability.</p>
+
+<p>Each thread and accessory is handpicked to match our standards of softness, color harmony, and long-lasting beauty. We make sure that every item — from hair clips to crochet tops, tumbler handles, and others is made with care and creativity.</p>
+
+<p>By working with small and honest suppliers, we support local businesses while crafting handmade products that bring comfort, charm, and a personal touch to every customer.</p>
+
+  <div class="mt-8 text-left">
+    <div class="supplier-card">
+      <span class="supplier-name">Hairacc.ph (Shopee)</span>
+      <a class="visit-btn" href="https://shopee.ph/hairacc.ph?uls_trackid=541qhpvg003k&utm_content=4L72oWEY8bBrfo8StdaQggH7aJDV" target="_blank">Visit</a>
+    </div>
+
+    <div class="supplier-card">
+      <span class="supplier-name">CrochetColours Online Shop</span>
+      <a class="visit-btn" href="https://shopee.ph/crochetcoloursonlineshop?uls_trackid=541qhntq013k&utm_content=3oe7DPsDLkNvYPJYs1JUch6oCTYT/" target="_blank">Visit</a>
+    </div>
+
+  
+  </div>
 </div>
 
 </body>
