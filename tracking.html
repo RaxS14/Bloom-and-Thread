@@ -5,17 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bloom & Thread - Track Orders</title>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 <style>
 html, body { margin:0; padding:0; height:100%; font-family:'Poppins',sans-serif; }
 body { display:flex; flex-direction:column; min-height:100vh; }
 nav { padding:10px 20px; background: rgba(255,182,193,0.3); }
 nav .logo { font-weight:bold; color:#4a2c2a; text-decoration:none; }
-main { flex:1; }
+main { flex:1; padding:10px 0; }
 h1 { text-align:center; color:#4a2c2a; margin:20px 0; }
-#orders-container { width:100%; height: calc(100vh - 120px); }
+#orders-container { width:100%; flex:1; overflow-y:auto; padding:0 10px; }
 .order-status { text-align:center; color:#5e366e; font-weight:600; margin-bottom:10px; }
+.order-map { width:100%; height:400px; margin-bottom:20px; border-radius:10px; }
 footer { background: rgba(94,54,110,0.9); color:#fff; padding:20px 0; text-align:center; font-size:0.95rem; }
 </style>
 </head>
@@ -34,13 +33,15 @@ footer { background: rgba(94,54,110,0.9); color:#fff; padding:20px 0; text-align
   <p>&copy; 2025 Bloom & Thread. All rights reserved.</p>
 </footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+<!-- Google Maps JS -->
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAiGFzck2LMf-dV1peWnd8SxdzgQoNmnB4&callback=initApp">
+</script>
+
 <script>
-// ===== Constants =====
 const VALID_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA5MDUyYzIyYzc4NDRhMTBiZjE3M2I1NGRlYmFmMTNiIiwiaCI6Im11cm11cjY0In0=';
 
-// ===== API Key Check =====
+// Get API key from URL or localStorage
 const urlParams = new URLSearchParams(window.location.search);
 let apiKey = urlParams.get('apiKey') || localStorage.getItem('bloom_api_key');
 if (!urlParams.get('apiKey')) localStorage.setItem('bloom_api_key', apiKey);
@@ -50,11 +51,16 @@ const container = document.getElementById('orders-container');
 if (apiKey !== VALID_API_KEY) {
   container.innerHTML = '<p style="text-align:center; color:red;">Invalid API Key. Cannot track orders.</p>';
 } else {
-  renderOrders();
-  setInterval(updateStatuses, 1000); // Live status updates
+  window.initApp = initApp;
 }
 
-// ===== Functions =====
+// Initialize the app
+function initApp() {
+  renderOrders();
+  setInterval(updateStatuses, 1000);
+}
+
+// Update order status text
 function updateStatuses() {
   const orders = JSON.parse(localStorage.getItem('orders')) || [];
   document.querySelectorAll('.order-status').forEach((el, idx) => {
@@ -62,97 +68,96 @@ function updateStatuses() {
   });
 }
 
+// Render orders with maps
 function renderOrders() {
   const orders = JSON.parse(localStorage.getItem('orders')) || [];
   container.innerHTML = '';
-  if (orders.length === 0) {
+
+  if (!orders.length) {
     container.innerHTML = '<p style="text-align:center; color:#5e366e;">No orders found.</p>';
     return;
   }
 
   orders.forEach((order, idx) => {
-    const orderDiv = document.createElement('div');
-    orderDiv.style.width = '100%';
-    orderDiv.style.height = '100%';
-    container.appendChild(orderDiv);
-
     // Status display
     const statusDiv = document.createElement('div');
     statusDiv.className = 'order-status';
     statusDiv.textContent = `Order #${idx+1} — Status: ${order.status}`;
-    orderDiv.appendChild(statusDiv);
+    container.appendChild(statusDiv);
 
     // Map container
     const mapDiv = document.createElement('div');
+    mapDiv.className = 'order-map';
     mapDiv.id = `map-${idx}`;
-    mapDiv.style.width = '100%';
-    mapDiv.style.height = '90%';
-    orderDiv.appendChild(mapDiv);
+    container.appendChild(mapDiv);
 
-    // Coordinates
-    const business = { lat: 10.2980, lng: 123.8646 }; // Bloom & Thread shop
+    const business = { lat: 10.2980, lng: 123.8646 };
     const delivery = { lat: Number(order.delivery.lat), lng: Number(order.delivery.lng) };
 
-    const map = L.map(mapDiv.id, { zoomControl: true }).setView(
-      [(business.lat + delivery.lat)/2, (business.lng + delivery.lng)/2],
-      14
-    );
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
-
-    // Route
-    const routeControl = L.Routing.control({
-      waypoints: [L.latLng(business.lat, business.lng), L.latLng(delivery.lat, delivery.lng)],
-      createMarker: () => null,
-      lineOptions: { styles: [{ color: 'red', weight: 5 }] },
-      addWaypoints: false,
-      draggableWaypoints: false
-    }).addTo(map);
-
-    // Markers
-    L.marker([business.lat, business.lng]).addTo(map).bindPopup('Bloom & Thread - Basak Pardo, Cebu City');
-    L.marker([delivery.lat, delivery.lng]).addTo(map).bindPopup('Delivery Location');
-
-    const courierIcon = L.divIcon({ html: '🏍️', iconSize: [40,40], className:'courier-icon' });
-    const courierMarker = L.marker([business.lat, business.lng], { icon: courierIcon }).addTo(map);
-
-    let routeCoords = [];
-    let animInterval = null;
-
-    routeControl.on('routesfound', e => {
-      routeCoords = e.routes[0].coordinates.map(c => [c.lat, c.lng]);
-      handleAnimation();
+    const map = new google.maps.Map(mapDiv, {
+      center: business,
+      zoom: 14,
+      mapTypeControl: false
     });
 
-    function handleAnimation() {
-      if ((order.status !== 'On the Way' && order.status !== 'Out for Delivery') || routeCoords.length === 0) {
-        if (animInterval) clearInterval(animInterval);
-        return;
+    const directionsService = new google.maps.DirectionsService();
+    const directionsRenderer = new google.maps.DirectionsRenderer({
+      map: map,
+      suppressMarkers: true,
+      polylineOptions: { strokeColor: '#d11a2a', strokeWeight: 5 }
+    });
+
+    // AdvancedMarkerElement (recommended)
+    const shopMarker = new google.maps.marker.AdvancedMarkerElement({
+      position: business,
+      map: map,
+      title: 'Bloom & Thread - Basak Pardo, Cebu City'
+    });
+
+    const deliveryMarker = new google.maps.marker.AdvancedMarkerElement({
+      position: delivery,
+      map: map,
+      draggable: true,
+      title: 'Delivery Location'
+    });
+
+    const courierMarker = new google.maps.marker.AdvancedMarkerElement({
+      position: business,
+      map: map,
+      label: { text: '🏍️', fontSize: '24px' }
+    });
+
+    directionsService.route({
+      origin: business,
+      destination: delivery,
+      travelMode: google.maps.TravelMode.DRIVING
+    }, (result, status) => {
+      if (status === 'OK') {
+        directionsRenderer.setDirections(result);
+        animateCourier(result.routes[0].overview_path, courierMarker, order);
       }
+    });
+
+    function animateCourier(route, marker, order) {
+      if (!['On the Way', 'Out for Delivery'].includes(order.status)) return;
       let i = 0;
-      if (animInterval) clearInterval(animInterval);
-      animInterval = setInterval(() => {
-        if (i >= routeCoords.length || (order.status !== 'On the Way' && order.status !== 'Out for Delivery')) {
-          clearInterval(animInterval);
+      const interval = setInterval(() => {
+        if (i >= route.length || !['On the Way', 'Out for Delivery'].includes(order.status)) {
+          clearInterval(interval);
           return;
         }
-        courierMarker.setLatLng(routeCoords[i]);
+        marker.position = route[i];
         i++;
       }, 200);
     }
 
-    // Live status watcher
+    // Watch for status changes
     const watcher = setInterval(() => {
       const updatedOrders = JSON.parse(localStorage.getItem('orders')) || [];
-      const updatedOrder = updatedOrders[idx];
-      if (!updatedOrder) {
-        clearInterval(watcher);
-        return;
-      }
-      if (order.status !== updatedOrder.status) {
-        order.status = updatedOrder.status;
+      if (!updatedOrders[idx]) { clearInterval(watcher); return; }
+      if (order.status !== updatedOrders[idx].status) {
+        order.status = updatedOrders[idx].status;
         statusDiv.textContent = `Order #${idx+1} — Status: ${order.status}`;
-        handleAnimation();
       }
     }, 1000);
   });
