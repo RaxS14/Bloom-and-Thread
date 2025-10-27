@@ -14,8 +14,9 @@ nav { padding:10px 20px; background: rgba(255,182,193,0.3); }
 nav .logo { font-weight:bold; color:#4a2c2a; text-decoration:none; }
 main { flex:1; }
 h1 { text-align:center; color:#4a2c2a; margin:20px 0; }
-#orders-container { width:100%; height: calc(100vh - 120px); }
+#orders-container { width:100%; padding:10px 0; }
 .order-status { text-align:center; color:#5e366e; font-weight:600; margin-bottom:10px; }
+.order-map { width:100%; height:400px; margin-bottom:30px; }
 footer { background: rgba(94,54,110,0.9); color:#fff; padding:20px 0; text-align:center; font-size:0.95rem; }
 </style>
 </head>
@@ -37,26 +38,24 @@ footer { background: rgba(94,54,110,0.9); color:#fff; padding:20px 0; text-align
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
 <script>
-// ===== Constants =====
+// ===== API & Container =====
 const VALID_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA5MDUyYzIyYzc4NDRhMTBiZjE3M2I1NGRlYmFmMTNiIiwiaCI6Im11cm11cjY0In0=';
-
-// Use this key directly for this page
 const apiKey = VALID_API_KEY;
-
 const container = document.getElementById('orders-container');
 
+// ===== Check API =====
 if (!apiKey || apiKey !== VALID_API_KEY) {
   container.innerHTML = '<p style="text-align:center; color:red;">Invalid API Key. Cannot track orders.</p>';
 } else {
   renderOrders();
-  setInterval(updateStatuses, 1000); // Live status updates
+  setInterval(updateStatuses, 1000); // Live updates
 }
 
 // ===== Functions =====
 function updateStatuses() {
   const orders = JSON.parse(localStorage.getItem('orders')) || [];
   document.querySelectorAll('.order-status').forEach((el, idx) => {
-    if (orders[idx]) el.textContent = `Order #${idx+1} — Status: ${orders[idx].status}`;
+    if (orders[idx]) el.textContent = `Order #${orders[idx].id} — Status: ${orders[idx].status}`;
   });
 }
 
@@ -69,26 +68,28 @@ function renderOrders() {
     return;
   }
 
-  orders.forEach((order, idx) => {
+  // Optional: Get a specific orderId from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get('orderId'); // e.g., ?orderId=2
+  const filteredOrders = orderId ? orders.filter(o => o.id == orderId) : orders;
+
+  filteredOrders.forEach((order, idx) => {
+    // Container
     const orderDiv = document.createElement('div');
-    orderDiv.style.width = '100%';
-    orderDiv.style.height = '100%';
     container.appendChild(orderDiv);
 
-    // Status display
+    // Status
     const statusDiv = document.createElement('div');
     statusDiv.className = 'order-status';
-    statusDiv.textContent = `Order #${idx+1} — Status: ${order.status}`;
+    statusDiv.textContent = `Order #${order.id} — Status: ${order.status}`;
     orderDiv.appendChild(statusDiv);
 
-    // Map container
+    // Map
     const mapDiv = document.createElement('div');
-    mapDiv.id = `map-${idx}`;
-    mapDiv.style.width = '100%';
-    mapDiv.style.height = '90%';
+    mapDiv.id = `map-${order.id}`;
+    mapDiv.className = 'order-map';
     orderDiv.appendChild(mapDiv);
 
-    // Coordinates
     const business = { lat: 10.2980, lng: 123.8646 };
     const delivery = { lat: Number(order.delivery.lat), lng: Number(order.delivery.lng) };
 
@@ -99,7 +100,6 @@ function renderOrders() {
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
 
-    // Initial Route
     let routeControl = L.Routing.control({
       waypoints: [L.latLng(business.lat, business.lng), L.latLng(delivery.lat, delivery.lng)],
       createMarker: () => null,
@@ -111,8 +111,6 @@ function renderOrders() {
     // Markers
     L.marker([business.lat, business.lng]).addTo(map).bindPopup('Bloom & Thread - Basak Pardo, Cebu City');
     const deliveryMarker = L.marker([delivery.lat, delivery.lng], { draggable: true }).addTo(map).bindPopup('Delivery Location');
-
-    // Courier marker
     const courierIcon = L.divIcon({ html: '🏍️', iconSize: [40,40], className:'courier-icon' });
     const courierMarker = L.marker([business.lat, business.lng], { icon: courierIcon, draggable: true }).addTo(map);
 
@@ -136,11 +134,9 @@ function renderOrders() {
       }, 200);
     }
 
-    // Recalculate route when courier or delivery marker is dragged
     function recalcRoute() {
       const courierPos = courierMarker.getLatLng();
       const deliveryPos = deliveryMarker.getLatLng();
-
       map.removeControl(routeControl);
       routeControl = L.Routing.control({
         waypoints: [courierPos, deliveryPos],
@@ -159,7 +155,6 @@ function renderOrders() {
     courierMarker.on('dragend', recalcRoute);
     deliveryMarker.on('dragend', recalcRoute);
 
-    // Initial route calculation
     routeControl.on('routesfound', e => {
       routeCoords = e.routes[0].coordinates.map(c => [c.lat, c.lng]);
       animateCourier();
@@ -168,11 +163,11 @@ function renderOrders() {
     // Live status watcher
     setInterval(() => {
       const updatedOrders = JSON.parse(localStorage.getItem('orders')) || [];
-      const updatedOrder = updatedOrders[idx];
+      const updatedOrder = updatedOrders.find(o => o.id === order.id);
       if (!updatedOrder) return;
       if (order.status !== updatedOrder.status) {
         order.status = updatedOrder.status;
-        statusDiv.textContent = `Order #${idx+1} — Status: ${order.status}`;
+        statusDiv.textContent = `Order #${order.id} — Status: ${order.status}`;
         animateCourier();
       }
     }, 1000);
