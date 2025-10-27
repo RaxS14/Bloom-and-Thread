@@ -12,11 +12,13 @@ html, body { margin:0; padding:0; height:100%; font-family:'Poppins',sans-serif;
 body { display:flex; flex-direction:column; min-height:100vh; }
 nav { padding:10px 20px; background: rgba(255,182,193,0.3); }
 nav .logo { font-weight:bold; color:#4a2c2a; text-decoration:none; }
-main { flex:1; }
+main { flex:1; padding:20px; }
 h1 { text-align:center; color:#4a2c2a; margin:20px 0; }
 #orders-container { width:100%; padding:10px 0; }
 .order-status { text-align:center; color:#5e366e; font-weight:600; margin-bottom:10px; }
 .order-map { width:100%; height:400px; margin-bottom:30px; }
+.back-btn { display:inline-block; margin-bottom:20px; padding:10px 20px; background:#ff69b4; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; transition:0.3s; text-decoration:none; }
+.back-btn:hover { background:#ff85c1; }
 footer { background: rgba(94,54,110,0.9); color:#fff; padding:20px 0; text-align:center; font-size:0.95rem; }
 </style>
 </head>
@@ -28,6 +30,10 @@ footer { background: rgba(94,54,110,0.9); color:#fff; padding:20px 0; text-align
 
 <main>
   <h1>Track Your Orders</h1>
+
+  <!-- Back Button: uses history.back() to return to previous page -->
+  <button class="back-btn" onclick="history.back()">← Back to Orders</button>
+
   <div id="orders-container"></div>
 </main>
 
@@ -38,12 +44,12 @@ footer { background: rgba(94,54,110,0.9); color:#fff; padding:20px 0; text-align
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
 <script>
-// ===== API & Container =====
+// ===== Constants & Container =====
 const VALID_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA5MDUyYzIyYzc4NDRhMTBiZjE3M2I1NGRlYmFmMTNiIiwiaCI6Im11cm11cjY0In0=';
 const apiKey = VALID_API_KEY;
 const container = document.getElementById('orders-container');
 
-// ===== Check API =====
+// ===== Check API Key =====
 if (!apiKey || apiKey !== VALID_API_KEY) {
   container.innerHTML = '<p style="text-align:center; color:red;">Invalid API Key. Cannot track orders.</p>';
 } else {
@@ -51,7 +57,7 @@ if (!apiKey || apiKey !== VALID_API_KEY) {
   setInterval(updateStatuses, 1000); // Live updates
 }
 
-// ===== Functions =====
+// ===== Update Order Statuses =====
 function updateStatuses() {
   const orders = JSON.parse(localStorage.getItem('orders')) || [];
   document.querySelectorAll('.order-status').forEach((el, idx) => {
@@ -59,6 +65,7 @@ function updateStatuses() {
   });
 }
 
+// ===== Render Orders & Maps =====
 function renderOrders() {
   const orders = JSON.parse(localStorage.getItem('orders')) || [];
   container.innerHTML = '';
@@ -68,13 +75,11 @@ function renderOrders() {
     return;
   }
 
-  // Optional: Get a specific orderId from URL
   const urlParams = new URLSearchParams(window.location.search);
-  const orderId = urlParams.get('orderId'); // e.g., ?orderId=2
+  const orderId = urlParams.get('orderId'); // Optional filter
   const filteredOrders = orderId ? orders.filter(o => o.id == orderId) : orders;
 
-  filteredOrders.forEach((order, idx) => {
-    // Container
+  filteredOrders.forEach(order => {
     const orderDiv = document.createElement('div');
     container.appendChild(orderDiv);
 
@@ -93,9 +98,8 @@ function renderOrders() {
     const business = { lat: 10.2980, lng: 123.8646 };
     const delivery = { lat: Number(order.delivery.lat), lng: Number(order.delivery.lng) };
 
-    const map = L.map(mapDiv.id, { zoomControl: true }).setView(
-      [(business.lat + delivery.lat)/2, (business.lng + delivery.lng)/2],
-      14
+    const map = L.map(mapDiv.id, { zoomControl:true }).setView(
+      [(business.lat + delivery.lat)/2, (business.lng + delivery.lng)/2], 14
     );
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
@@ -103,29 +107,27 @@ function renderOrders() {
     let routeControl = L.Routing.control({
       waypoints: [L.latLng(business.lat, business.lng), L.latLng(delivery.lat, delivery.lng)],
       createMarker: () => null,
-      lineOptions: { styles: [{ color: 'red', weight: 5 }] },
+      lineOptions: { styles: [{ color:'red', weight:5 }] },
       addWaypoints: false,
       draggableWaypoints: false
     }).addTo(map);
 
-    // Markers
     L.marker([business.lat, business.lng]).addTo(map).bindPopup('Bloom & Thread - Basak Pardo, Cebu City');
-    const deliveryMarker = L.marker([delivery.lat, delivery.lng], { draggable: true }).addTo(map).bindPopup('Delivery Location');
-    const courierIcon = L.divIcon({ html: '🏍️', iconSize: [40,40], className:'courier-icon' });
-    const courierMarker = L.marker([business.lat, business.lng], { icon: courierIcon, draggable: true }).addTo(map);
+    const deliveryMarker = L.marker([delivery.lat, delivery.lng], { draggable:true }).addTo(map).bindPopup('Delivery Location');
+    const courierIcon = L.divIcon({ html:'🏍️', iconSize:[40,40], className:'courier-icon' });
+    const courierMarker = L.marker([business.lat, business.lng], { icon: courierIcon, draggable:true }).addTo(map);
 
-    let routeCoords = [];
-    let animInterval = null;
+    let routeCoords = [], animInterval = null;
 
     function animateCourier() {
-      if ((order.status !== 'On the Way' && order.status !== 'Out for Delivery') || routeCoords.length === 0) {
-        if (animInterval) clearInterval(animInterval);
+      if ((order.status !== 'On the Way' && order.status !== 'Out for Delivery') || routeCoords.length===0) {
+        if(animInterval) clearInterval(animInterval);
         return;
       }
-      let i = 0;
-      if (animInterval) clearInterval(animInterval);
+      let i=0;
+      if(animInterval) clearInterval(animInterval);
       animInterval = setInterval(() => {
-        if (i >= routeCoords.length || (order.status !== 'On the Way' && order.status !== 'Out for Delivery')) {
+        if(i >= routeCoords.length || (order.status !== 'On the Way' && order.status !== 'Out for Delivery')) {
           clearInterval(animInterval);
           return;
         }
@@ -139,15 +141,15 @@ function renderOrders() {
       const deliveryPos = deliveryMarker.getLatLng();
       map.removeControl(routeControl);
       routeControl = L.Routing.control({
-        waypoints: [courierPos, deliveryPos],
-        createMarker: () => null,
-        lineOptions: { styles: [{ color: 'red', weight: 5 }] },
-        addWaypoints: false,
-        draggableWaypoints: false
+        waypoints:[courierPos, deliveryPos],
+        createMarker:()=>null,
+        lineOptions:{ styles:[{ color:'red', weight:5 }] },
+        addWaypoints:false,
+        draggableWaypoints:false
       }).addTo(map);
 
-      routeControl.on('routesfound', e => {
-        routeCoords = e.routes[0].coordinates.map(c => [c.lat, c.lng]);
+      routeControl.on('routesfound', e=>{
+        routeCoords = e.routes[0].coordinates.map(c=>[c.lat,c.lng]);
         animateCourier();
       });
     }
@@ -155,24 +157,25 @@ function renderOrders() {
     courierMarker.on('dragend', recalcRoute);
     deliveryMarker.on('dragend', recalcRoute);
 
-    routeControl.on('routesfound', e => {
-      routeCoords = e.routes[0].coordinates.map(c => [c.lat, c.lng]);
+    routeControl.on('routesfound', e=>{
+      routeCoords = e.routes[0].coordinates.map(c=>[c.lat,c.lng]);
       animateCourier();
     });
 
     // Live status watcher
-    setInterval(() => {
+    setInterval(()=>{
       const updatedOrders = JSON.parse(localStorage.getItem('orders')) || [];
       const updatedOrder = updatedOrders.find(o => o.id === order.id);
-      if (!updatedOrder) return;
-      if (order.status !== updatedOrder.status) {
+      if(!updatedOrder) return;
+      if(order.status !== updatedOrder.status) {
         order.status = updatedOrder.status;
         statusDiv.textContent = `Order #${order.id} — Status: ${order.status}`;
         animateCourier();
       }
-    }, 1000);
+    },1000);
   });
 }
 </script>
+
 </body>
 </html>

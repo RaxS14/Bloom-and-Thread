@@ -87,15 +87,30 @@ function updateReports() {
     options:{ responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
   });
 
-  // Orders status
-  const statusCounts = { 'Waiting for Confirmation':0, 'Confirmed':0, 'Delivered':0, 'Cancelled':0 };
-  orders.forEach(o=>{ statusCounts[o.status]=(statusCounts[o.status]||0)+1; });
-  if(statusChart){statusChart.destroy();}
-  statusChart = new Chart(document.getElementById('statusChart'),{
-    type:'doughnut',
-    data:{ labels:Object.keys(statusCounts), datasets:[{ data:Object.values(statusCounts), backgroundColor:['#ff69b4','#ffb6c1','#ffc0cb','#ff99c8'] }] },
-    options:{ responsive:true }
-  });
+// Orders status as horizontal bar chart
+const statusCounts = { 'Waiting for Confirmation':0, 'Confirmed':0, 'Delivered':0, 'Cancelled':0 };
+orders.forEach(o => { statusCounts[o.status] = (statusCounts[o.status]||0)+1; });
+
+if(statusChart){ statusChart.destroy(); }
+statusChart = new Chart(document.getElementById('statusChart'), {
+    type: 'bar', // keep as 'bar'
+    data: {
+        labels: Object.keys(statusCounts),
+        datasets: [{
+            label: 'Number of Orders',
+            data: Object.values(statusCounts),
+            backgroundColor: ['#ff69b4','#ffb6c1','#ffc0cb','#ff99c8'],
+            borderColor: ['#b30059','#b30059','#b30059','#b30059'],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        indexAxis: 'y', // makes the bars horizontal
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true } } // x-axis is now numeric
+    }
+});
 
   // Recent Orders table
   const tbody = document.querySelector('#ordersTable tbody');
@@ -115,8 +130,14 @@ updateReports();
 // Listen for localStorage changes (cross-tab)
 window.addEventListener('storage', updateReports);
 
-// Auto-update every 2 seconds in same tab
-setInterval(updateReports,2000);
+// Update status chart without destroying
+const statusCounts = { 'Waiting for Confirmation':0, 'Confirmed':0, 'Delivered':0, 'Cancelled':0 };
+orders.forEach(o => { statusCounts[o.status] = (statusCounts[o.status]||0)+1; });
+
+statusChart.data.labels = Object.keys(statusCounts);
+statusChart.data.datasets[0].data = Object.values(statusCounts);
+statusChart.update();
+
 </script>
 </body>
 </html>
